@@ -40,4 +40,4 @@ interface StreamPuzzle<INPUT, OUTPUT> : Puzzle<Sequence<INPUT>, OUTPUT> {
     fun parseInput(input: String): INPUT
 }
 
-private fun readLines(path: String) = File(path).readLines()
+fun readLines(path: String) = File(path).readLines()

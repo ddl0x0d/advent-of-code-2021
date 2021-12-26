@@ -1,6 +1,12 @@
 package aoc2021.day23
 
 import aoc2021.BatchPuzzle
+import aoc2021.readLines
+
+fun main() {
+    Amphipods.solve("examples/day-23.txt")
+    // expected output: 12_521 and 44_169
+}
 
 /**
  * [Day 23: Amphipod](https://adventofcode.com/2021/day/23)
@@ -10,9 +16,17 @@ object Amphipods : BatchPuzzle<Burrow, Int> {
     override val name = "🦐 Amphipod"
 
     private const val HALLWAY_SIZE = 11
-    private val roomXs = 3..9 step 2
-    private const val OUTER_ROOM_Y = 2
-    private const val INNER_ROOM_Y = 3
+    private const val ROOMS = 4
+
+    override fun solve(path: String) {
+        println(name)
+        val input1 = readLines(path).drop(2).take(2).map { line ->
+            line.trim().filterNot { it == '#' }
+        }
+        println("Part One = ${part1(parseInput(input1))}")
+        val input2 = listOf(input1[0], "DCBA", "DBAC", input1[1])
+        println("Part Two = ${part2(parseInput(input2))}")
+    }
 
     override fun parseInput(input: List<String>): Burrow {
         val hallway = buildHallway()
@@ -23,54 +37,56 @@ object Amphipods : BatchPuzzle<Burrow, Int> {
     }
 
     private fun buildHallway() = List(HALLWAY_SIZE) {
-        Location(index = it)
+        Location(x = it, y = 0)
     }
 
-    private fun buildRooms(input: List<String>) = roomXs.mapIndexed { i, x ->
+    private fun buildRooms(input: List<String>) = (0 until ROOMS).map { xi ->
+        val x = (xi + 1) * 2
         Room(
-            type = Amphipod.Type.values()[i],
-            outer = Location(index = (i + 1) * 2, amphipod = Amphipod.Type.byChar(input[OUTER_ROOM_Y][x])),
-            inner = Location(index = (i + 1) * 2, amphipod = Amphipod.Type.byChar(input[INNER_ROOM_Y][x]))
+            index = x,
+            type = Amphipod.Type.values()[xi],
+            locations = input.indices.map { yi ->
+                Location(
+                    x = x, y = yi + 1,
+                    amphipod = Amphipod.Type.byChar(input[yi][xi]))
+            }
         )
     }
 
     private fun connectLocations(hallway: List<Location>, rooms: List<Room>) {
-        val roomIndexes = rooms.map { it.inner.index }
+        val roomIndexes = rooms.map { it.index }
         hallway.filterNot {
-            it.index in roomIndexes
-        }.forEach { hallwayLocation ->
+            it.x in roomIndexes
+        }.forEach { hall ->
             rooms.forEach { room ->
-                val hallwayIndex = hallwayLocation.index
-                val roomIndex = room.inner.index
-                val indexRange = when {
-                    hallwayIndex < roomIndex -> (hallwayIndex + 1)..roomIndex
-                    hallwayIndex > roomIndex -> (hallwayIndex - 1) downTo roomIndex
+                val transit = when {
+                    hall.x < room.index -> (hall.x + 1)..room.index
+                    hall.x > room.index -> (hall.x - 1) downTo room.index
                     else -> error("Hallway and room indexes must be different")
+                }.map { hallway[it] }
+                (room.locations.size downTo 1).forEach {
+                    hall.paths += Path(transit + room.locations.subList(0, it))
                 }
-                val transit = indexRange.map { hallway[it] }
-                hallwayLocation.paths += Path(transit + room.outer + room.inner)
-                hallwayLocation.paths += Path(transit + room.outer)
-                room.inner.paths += Path(listOf(room.outer) + transit.reversed() + hallwayLocation)
-                room.outer.paths += Path(transit.reversed() + hallwayLocation)
+                room.locations.forEachIndexed { i, location ->
+                    location.paths += Path(room.locations.subList(0, i).reversed() + transit.reversed() + hall)
+                }
             }
         }
     }
 
     private fun buildAmphipods(rooms: List<Room>) = rooms
-        .flatMap { listOf(it.outer, it.inner) }
+        .flatMap { it.locations }
         .map { Amphipod(type = it.amphipod!!, location = it) }
 
     /**
      * What is the least energy required to organize the amphipods?
      */
-    override fun part1(input: Burrow): Int = input.explore()!!
+    override fun part1(input: Burrow): Int = input.complete()!!
 
     /**
-     * TODO
+     * What is the least energy required to organize the amphipods?
      */
-    override fun part2(input: Burrow): Int {
-        return 0
-    }
+    override fun part2(input: Burrow): Int = input.complete()!!
 }
 
 class Burrow(
@@ -78,37 +94,61 @@ class Burrow(
     private val hallway: List<Location>,
     private val amphipods: List<Amphipod>,
 ) {
-    private val organized: Boolean
-        get() = rooms.all { it.organized }
+    private val completed: Boolean
+        get() = rooms.all { it.completed }
 
     private var minEnergy = Int.MAX_VALUE
 
-    fun explore(energy: Int = 0): Int? = when {
-        energy >= minEnergy -> null
-        organized -> energy.also {
-            minEnergy = minOf(minEnergy, energy)
-            println(minEnergy)
+    fun complete(energy: Int = 0, memo: MutableMap<String, MemoState> = mutableMapOf()): Int? {
+        val memoKey = memoKey()
+        val state = memo[memoKey]
+        return when {
+            state != null && energy >= state.energy -> state.minEnergy
+            energy >= minEnergy -> null
+            completed -> energy.also {
+                minEnergy = minOf(minEnergy, energy)
+            }
+            else -> amphipods.flatMap { amphipod ->
+                amphipod.possiblePaths().map { path ->
+                    Move(amphipod, amphipod.location, path.target, path.length)
+                }
+            }.mapNotNull { move ->
+                val spent = move.forward()
+                complete(energy + spent, memo).also {
+                    move.backward()
+                }
+            }.minOrNull().also {
+                memo[memoKey] = MemoState(minEnergy = it, energy = energy)
+            }
         }
-        else -> amphipods.flatMap { amphipod ->
-            amphipod.possiblePaths().map { path ->
-                amphipod to path
-            }
-        }.mapNotNull { (amphipod, path) ->
-            val start = amphipod.location
-            val spent = amphipod.move(path.target, path.length)
-            explore(energy + spent).also {
-                amphipod.move(start, -path.length)
-            }
-        }.minOrNull()
     }
+
+    private fun memoKey(): String = amphipods.joinToString { "${it.location.x}:${it.location.y}" }
 
     override fun toString() = buildString {
         appendLine("#".repeat(13))
         appendLine("#${hallway.joinToString("")}#")
-        appendLine("###${rooms.map { it.outer }.joinToString("#")}###")
-        appendLine("  #${rooms.map { it.inner }.joinToString("#")}#")
+        appendLine("###${rooms.map { it.locations[0] }.joinToString("#")}###")
+        (1 until (rooms.firstOrNull()?.locations?.size ?: 0)).forEach { roomDepth ->
+            appendLine("  #${rooms.map { it.locations[roomDepth] }.joinToString("#")}#")
+        }
         appendLine("  ${"#".repeat(9)}")
     }
+}
+
+data class MemoState(
+    val minEnergy: Int?,
+    val energy: Int,
+)
+
+data class Move(
+    val amphipod: Amphipod,
+    val from: Location,
+    val to: Location,
+    val steps: Int,
+) {
+    fun forward(): Int = amphipod.move(to, steps)
+    fun backward(): Int = amphipod.move(from, -steps)
 }
 
 data class Amphipod(
@@ -117,18 +157,19 @@ data class Amphipod(
 ) {
     fun possiblePaths(): List<Path> = with(location) {
         when {
-            room == null -> paths.filter { it.target.room?.type == type && it.free }
-            type == room?.type && location === room?.inner -> emptyList()
-            type == room?.type && type == room?.outer?.amphipod -> emptyList()
+            room == null -> paths.filter {
+                it.target.room!!.fits(type) && it.free
+            }
+            room!!.fits(type) -> emptyList()
             else -> paths.filter { it.free }
         }
     }
 
-    fun move(target: Location, size: Int): Int {
+    fun move(target: Location, steps: Int): Int {
         location.amphipod = null
         target.amphipod = type
         location = target
-        return type.energy * size
+        return type.energy * steps
     }
 
     enum class Type(val char: Char, val energy: Int) {
@@ -140,27 +181,30 @@ data class Amphipod(
 
         companion object {
             fun byChar(char: Char): Type =
-                values().first { it.char == char }
+                values().firstOrNull { it.char == char }
+                    ?: error("Unknown character '$char'")
         }
     }
 }
 
 data class Room(
+    val index: Int,
     val type: Amphipod.Type,
-    val outer: Location,
-    val inner: Location,
+    val locations: List<Location>,
 ) {
     init {
-        outer.room = this
-        inner.room = this
+        locations.forEach { it.room = this }
     }
 
-    val organized: Boolean
-        get() = type == outer.amphipod && type == inner.amphipod
+    fun fits(type: Amphipod.Type): Boolean =
+        this.type == type && locations.all { it.amphipod == type || it.amphipod == null }
+
+    val completed: Boolean
+        get() = locations.all { it.amphipod == type }
 }
 
 data class Location(
-    val index: Int,
+    val x: Int, val y: Int,
     var amphipod: Amphipod.Type? = null,
 ) {
     var room: Room? = null

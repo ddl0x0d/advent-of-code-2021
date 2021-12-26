@@ -11,10 +11,10 @@ object HydrothermalVenture : BatchPuzzle<List<Line>, Int> {
 
     override val name = "🌪 Hydrothermal Venture"
 
-    private val lineRegex = "(\\d+),(\\d+) -> (\\d+),(\\d+)".toRegex()
+    private val regex = "(\\d+),(\\d+) -> (\\d+),(\\d+)".toRegex()
 
     override fun parseInput(input: List<String>): List<Line> = input.mapNotNull {
-        lineRegex.matchEntire(it)
+        regex.matchEntire(it)
     }.map { match ->
         val (x1, y1, x2, y2) = match.destructured.toList().map { it.toInt() }
         Line(Point(x1, y1), Point(x2, y2))

@@ -39,11 +39,13 @@ class MONAD(private val instructions: List<String>) {
     private var z = Variable("z")
     private var w = Variable("w")
 
+    private val regex = "(\\w{3}) ([xyzw])(?: (([xyzw]|-?\\d+)))?".toRegex()
+
     fun check(modelNumber: String): Boolean {
         check(modelNumber.length == 14) { "Model number must be 14-digit number" }
         var modelIndex = 0
         instructions.forEach { instruction ->
-            val (op, a, b) = instructionRegex.matchEntire(instruction)!!.destructured
+            val (op, a, b) = regex.matchEntire(instruction)!!.destructured
             val varA = variable(a)!!
             val operation = Operation.Type.values().firstOrNull {
                 it.name == op.uppercase()
@@ -60,8 +62,6 @@ class MONAD(private val instructions: List<String>) {
         }
         return z.value == 0L
     }
-
-    private val instructionRegex = "(\\w{3}) ([xyzw])(?: (([xyzw]|-?\\d+)))?".toRegex()
 
     private fun variable(variable: String): Variable? = when (variable) {
         "x" -> x
@@ -89,7 +89,7 @@ class MONAD(private val instructions: List<String>) {
 
     data class Input(
         private val name: String,
-        override var value: Long? = null
+        override var value: Long? = null,
     ) : Expression {
         override val estimates: LongRange
             get() = 1L..9L
@@ -99,7 +99,7 @@ class MONAD(private val instructions: List<String>) {
 
     data class Variable(
         private val name: String,
-        var expression: Expression = Literal.ZERO
+        var expression: Expression = Literal.ZERO,
     ) : Expression {
         override val value: Long?
             get() = expression.value

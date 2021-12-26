@@ -27,8 +27,8 @@ Solutions for [Advent of Code 2021](https://adventofcode.com/2021) puzzles in [K
 | 19  | 🗼 [Beacon Scanner](https://adventofcode.com/2021/day/19)          | [❌](src/main/kotlin/aoc2021/day19/BeaconScanner.kt)                                    |
 | 20  | 🧩 [Trench Map](https://adventofcode.com/2021/day/20)              | ⭐⭐ [`TrenchMap`](src/main/kotlin/aoc2021/day20/TrenchMap.kt)                           |
 | 21  | 🎲 [Dirac Dice](https://adventofcode.com/2021/day/21)              | ⭐⭐ [`DiracDice`](src/main/kotlin/aoc2021/day21/DiracDice.kt)                           |
-| 22  | ⚛ [Reactor Reboot](https://adventofcode.com/2021/day/22)           | [❌](src/main/kotlin/aoc2021/day22/ReactorReboot.kt)                                    |
-| 23  | 🦐 [Amphipod](https://adventofcode.com/2021/day/23)                | [❌](src/main/kotlin/aoc2021/day23/Amphipods.kt)                                        |
+| 22  | ⚛ [Reactor Reboot](https://adventofcode.com/2021/day/22)           | ⭐⭐ [`ReactorReboot`](src/main/kotlin/aoc2021/day22/ReactorReboot.kt)                   |
+| 23  | 🦐 [Amphipod](https://adventofcode.com/2021/day/23)                | ⭐⭐ [`Amphipods`](src/main/kotlin/aoc2021/day23/Amphipods.kt)                           |
 | 24  | 🧮 [Arithmetic Logic Unit](https://adventofcode.com/2021/day/24)   | [❌](src/main/kotlin/aoc2021/day24/ArithmeticLogicUnit.kt)                              |
 | 25  | 🥒 [Sea Cucumber](https://adventofcode.com/2021/day/25)            | ⭐ [`SeaCucumber`](src/main/kotlin/aoc2021/day25/SeaCucumber.kt)                        |
 

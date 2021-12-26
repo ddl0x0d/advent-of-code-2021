@@ -9,12 +9,12 @@ object ExtendedPolymerization : BatchPuzzle<Instruction, Long> {
 
     override val name = "🧪 Extended Polymerization"
 
-    private val ruleRegex = "(\\w{2}) -> (\\w)".toRegex()
+    private val regex = "(\\w{2}) -> (\\w)".toRegex()
 
     override fun parseInput(input: List<String>) = Instruction(
         template = input.first(),
         replace = input.drop(2).mapNotNull {
-            ruleRegex.matchEntire(it)?.destructured
+            regex.matchEntire(it)?.destructured
         }.associate { (pair, insert) ->
             pair to listOf(pair[0] + insert, insert + pair[1])
         }

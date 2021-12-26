@@ -9,7 +9,7 @@ object TransparentOrigami : BatchPuzzle<Origami, Int> {
 
     override val name = "📂 Transparent Origami"
 
-    private val foldRegex = "fold along ([xy])=(\\d+)".toRegex()
+    private val regex = "fold along ([xy])=(\\d+)".toRegex()
 
     override fun solve(path: String) {
         println(name)
@@ -28,7 +28,7 @@ object TransparentOrigami : BatchPuzzle<Origami, Int> {
                 }.toSet(),
             folds = input.drop(separatorIndex + 1)
                 .mapNotNull {
-                    foldRegex.matchEntire(it)?.destructured
+                    regex.matchEntire(it)?.destructured
                 }.map { (type, value) ->
                     Fold(
                         type = when (type) {

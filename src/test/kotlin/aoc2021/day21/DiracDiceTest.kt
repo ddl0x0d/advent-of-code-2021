@@ -5,9 +5,11 @@ import assertk.all
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.prop
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
+@Disabled("Runs for too long")
 class DiracDiceTest : PuzzleTest<List<Player>, Long>(
     puzzle = DiracDice,
     path = "examples/day-21.txt",

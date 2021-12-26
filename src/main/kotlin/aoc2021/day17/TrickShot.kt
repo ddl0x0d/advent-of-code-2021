@@ -15,10 +15,10 @@ object TrickShot : BatchPuzzle<TargetArea, Int> {
 
     override val name = "⛳ Trick Shot"
 
-    private val areaRegex = "target area: x=(-?\\d+)..(-?\\d+), y=(-?\\d+)..(-?\\d+)".toRegex()
+    private val regex = "target area: x=(-?\\d+)..(-?\\d+), y=(-?\\d+)..(-?\\d+)".toRegex()
 
     override fun parseInput(input: List<String>): TargetArea {
-        val (minX, maxX, minY, maxY) = areaRegex.matchEntire(input.first())?.destructured!!
+        val (minX, maxX, minY, maxY) = regex.matchEntire(input.first())?.destructured!!
         return TargetArea(minX.toInt(), maxX.toInt(), minY.toInt(), maxY.toInt())
     }
 
